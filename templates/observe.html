@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Observe — NewsForge{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div class="page-title">🌐 Observed News Sources <span style="font-size:14px;background:#f1f5f9;padding:2px 10px;border-radius:20px;color:#64748b;font-weight:500">{{ sources|length }}</span></div>
+  </div>
+
+  <!-- Add source -->
+  <div class="card" style="padding:20px;margin-bottom:20px">
+    <div style="font-size:14px;font-weight:600;margin-bottom:14px">Add News Website</div>
+    <div style="display:flex;gap:10px">
+      <input id="src-name" placeholder="Source name (e.g. Prothom Alo)" style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;width:200px">
+      <input id="src-url" placeholder="https://prothomalo.com" style="flex:1;padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none">
+      <button class="btn btn-primary" onclick="addSource()">+ Add Source</button>
+    </div>
+  </div>
+
+  <!-- Source list -->
+  {% if not sources %}
+  <div class="card">
+    <div class="empty">
+      <div class="empty-icon">🌐</div>
+      <h3>No sources added</h3>
+      <p>Add news websites above to monitor their latest articles in the Feed tab.</p>
+    </div>
+  </div>
+  {% else %}
+  <div class="card">
+    <table class="table">
+      <thead><tr><th>Website</th><th>URL</th><th>Added</th><th>Actions</th></tr></thead>
+      <tbody id="sources-tbody">
+        {% for s in sources %}
+        <tr id="src-{{ s.id }}">
+          <td>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:34px;height:34px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#4f46e5">{{ s.name[0].upper() }}</div>
+              <span style="font-weight:600">{{ s.name }}</span>
+            </div>
+          </td>
+          <td><a href="{{ s.url }}" target="_blank" style="color:#4f46e5;font-size:13px">{{ s.url }}</a></td>
+          <td style="font-size:13px;color:#64748b">{{ s.created_at.strftime('%d %b %Y') }}</td>
+          <td>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-outline btn-sm" onclick="window.location.href='/feed'">📰 View Feed</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteSource({{ s.id }})">🗑</button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+<script>
+async function addSource(){
+  const name=document.getElementById('src-name').value.trim();
+  const url=document.getElementById('src-url').value.trim();
+  if(!url){alert('Please enter a URL.');return;}
+  const r=await fetch('/api/sources',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,url})});
+  const d=await r.json();
+  if(d.ok){
+    document.getElementById('src-name').value='';
+    document.getElementById('src-url').value='';
+    // Add row dynamically
+    const tbody=document.getElementById('sources-tbody');
+    if(!tbody){location.reload();return;}
+    const tr=document.createElement('tr');
+    tr.id=`src-${d.id}`;
+    tr.innerHTML=`<td><div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#4f46e5">${d.name[0].toUpperCase()}</div><span style="font-weight:600">${d.name}</span></div></td><td><a href="${d.url}" target="_blank" style="color:#4f46e5;font-size:13px">${d.url}</a></td><td style="font-size:13px;color:#64748b">Today</td><td><div style="display:flex;gap:6px"><button class="btn btn-outline btn-sm" onclick="window.location.href='/feed'">📰 View Feed</button><button class="btn btn-danger btn-sm" onclick="deleteSource(${d.id})">🗑</button></div></td>`;
+    tbody.prepend(tr);
+  }
+}
+async function deleteSource(id){
+  if(!confirm('Remove this source?')) return;
+  const r=await fetch(`/api/sources/${id}`,{method:'DELETE'});
+  if((await r.json()).ok) document.getElementById(`src-${id}`).remove();
+}
+</script>
+{% endblock %}

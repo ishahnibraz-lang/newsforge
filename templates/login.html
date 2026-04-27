@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — NewsForge</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:linear-gradient(135deg,#0f172a,#1e1b4b);min-height:100vh;display:flex;align-items:center;justify-content:center}
+.box{background:#fff;border-radius:16px;padding:40px;width:100%;max-width:420px;box-shadow:0 24px 64px rgba(0,0,0,.4)}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:32px;justify-content:center}
+.licon{width:44px;height:44px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff}
+.logo-txt{font-size:22px;font-weight:800;color:#1e293b}
+h2{font-size:18px;font-weight:700;color:#1e293b;margin-bottom:6px;text-align:center}
+.sub{font-size:13px;color:#64748b;text-align:center;margin-bottom:28px}
+.tabs{display:flex;background:#f1f5f9;border-radius:8px;padding:3px;margin-bottom:24px}
+.tab{flex:1;text-align:center;padding:8px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;color:#64748b;transition:.15s;border:none;background:none}
+.tab.active{background:#fff;color:#4f46e5;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px}
+.form-group input{width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;transition:.2s;color:#1e293b}
+.form-group input:focus{border-color:#4f46e5;box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.btn{width:100%;padding:12px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;transition:.2s;margin-top:4px}
+.btn:hover{opacity:.92;transform:translateY(-1px)}
+.flash{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+#login-form,#register-form{display:none}
+#login-form.show,#register-form.show{display:block}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="logo">
+    <div class="licon">⚡</div>
+    <span class="logo-txt">NewsForge</span>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div class="flash">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('login')">Login</button>
+    <button class="tab" onclick="showTab('register')">Register</button>
+  </div>
+
+  <!-- LOGIN -->
+  <form id="login-form" class="show" method="POST" action="/login">
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" name="email" placeholder="you@example.com" required>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" name="password" placeholder="••••••••" required>
+    </div>
+    <button type="submit" class="btn">Login</button>
+  </form>
+
+  <!-- REGISTER -->
+  <form id="register-form" method="POST" action="/register">
+    <div class="form-group">
+      <label>Full Name</label>
+      <input type="text" name="name" placeholder="Your name" required>
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" name="email" placeholder="you@example.com" required>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" name="password" placeholder="Min 6 characters" required minlength="6">
+    </div>
+    <button type="submit" class="btn">Create Account</button>
+  </form>
+</div>
+<script>
+function showTab(t){
+  document.getElementById('login-form').classList.toggle('show',t==='login');
+  document.getElementById('register-form').classList.toggle('show',t==='register');
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',(t==='login'&&i===0)||(t==='register'&&i===1)));
+}
+</script>
+</body>
+</html>

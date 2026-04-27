@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Credits — NewsForge{% endblock %}
+{% block content %}
+<div class="page" style="max-width:800px">
+  <div class="page-header">
+    <div class="page-title">🪙 Credit History</div>
+  </div>
+
+  <div class="card" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);border:none;padding:28px;margin-bottom:20px;color:#fff;display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-size:13px;font-weight:600;opacity:.8;margin-bottom:6px">Current Balance</div>
+      <div style="font-size:40px;font-weight:800">{{ current_user.credits_remaining }}</div>
+      <div style="font-size:12px;opacity:.7;margin-top:4px">Daily Limit: {{ current_user.daily_limit }} credits · Plan: {{ current_user.plan.name }}</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:13px;opacity:.8;margin-bottom:4px">Used today</div>
+      <div style="font-size:28px;font-weight:700">{{ current_user.daily_used }}</div>
+      <div style="font-size:12px;opacity:.7">Resets at midnight</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="padding:16px 20px;border-bottom:1px solid #f1f5f9;font-size:14px;font-weight:600">Transaction History</div>
+    {% if not transactions %}
+    <div class="empty"><div class="empty-icon">📊</div><h3>No transactions yet</h3><p>Your credit usage will appear here.</p></div>
+    {% else %}
+    <table class="table">
+      <thead><tr><th>Description</th><th>Type</th><th>Amount</th><th>Time</th></tr></thead>
+      <tbody>
+        {% for t in transactions %}
+        <tr>
+          <td style="font-size:13px">{{ t.description }}</td>
+          <td><span class="badge {{ 'badge-live' if t.amount > 0 else 'badge-draft' }}">{{ 'Top-up' if t.amount > 0 else 'Used' }}</span></td>
+          <td style="font-weight:700;color:{{ '#16a34a' if t.amount > 0 else '#dc2626' }}">{{ '+' if t.amount > 0 else '' }}{{ t.amount }}</td>
+          <td style="font-size:12px;color:#94a3b8">{{ t.created_at.strftime('%d %b %Y, %I:%M %p') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

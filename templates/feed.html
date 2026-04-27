@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Feed — NewsForge{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div class="page-title">📰 Today's Raw News Feed</div>
+    <div style="display:flex;gap:8px">
+      {% if sources %}
+      <select id="source-sel" class="btn btn-outline" style="cursor:pointer">
+        <option value="">— Select source —</option>
+        {% for s in sources %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-primary" onclick="scrape()">🔄 Refresh Feed</button>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if not sources %}
+  <div class="card">
+    <div class="empty">
+      <div class="empty-icon">🌐</div>
+      <h3>No sources added yet</h3>
+      <p>Go to <a href="/observe" style="color:#4f46e5">Observe</a> to add news websites to monitor.</p>
+    </div>
+  </div>
+  {% else %}
+  <div id="feed-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px">
+    <div class="card" style="padding:40px;text-align:center;color:#64748b;grid-column:1/-1">
+      Select a source above and click Refresh to load the latest news.
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<style>
+.feed-card{background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;display:flex;flex-direction:column;transition:.2s}
+.feed-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-2px)}
+.feed-card img{width:100%;height:160px;object-fit:cover;background:#f1f5f9}
+.feed-card-body{padding:14px;flex:1;display:flex;flex-direction:column;gap:10px}
+.feed-card-title{font-size:14px;font-weight:600;line-height:1.5;color:#1e293b}
+.feed-card-source{font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase}
+.feed-card-actions{display:flex;gap:8px;margin-top:auto}
+</style>
+
+<script>
+async function scrape(){
+  const sid = document.getElementById('source-sel').value;
+  if(!sid) return alert('Please select a news source first.');
+  const grid = document.getElementById('feed-grid');
+  grid.innerHTML = '<div style="padding:40px;text-align:center;color:#64748b;grid-column:1/-1">Loading feed...</div>';
+  try {
+    const r = await fetch(`/api/sources/${sid}/scrape`, {method:'POST'});
+    const d = await r.json();
+    if(d.error){grid.innerHTML=`<div style="padding:40px;text-align:center;color:#dc2626;grid-column:1/-1">${d.error}</div>`;return;}
+    if(!d.items||!d.items.length){grid.innerHTML='<div style="padding:40px;text-align:center;color:#64748b;grid-column:1/-1">No articles found from this source.</div>';return;}
+    grid.innerHTML = d.items.map(item=>`
+      <div class="feed-card">
+        ${item.image_url?`<img src="${esc(item.image_url)}" onerror="this.style.display='none'" alt="">`:''}
+        <div class="feed-card-body">
+          <div class="feed-card-source">${esc(item.source)}</div>
+          <div class="feed-card-title">${esc(item.title)}</div>
+          <div class="feed-card-actions">
+            <button class="btn btn-primary btn-sm" onclick="useStory('${escJs(item.title)}','${escJs(item.url)}','${escJs(item.image_url)}')">✍️ Use Story</button>
+            <a href="${esc(item.url)}" target="_blank" class="btn btn-outline btn-sm">🔗 Read</a>
+          </div>
+        </div>
+      </div>`).join('');
+  } catch(e){ grid.innerHTML=`<div style="padding:40px;text-align:center;color:#dc2626;grid-column:1/-1">Error: ${e.message}</div>`; }
+}
+
+function useStory(title, url, img){
+  sessionStorage.setItem('prefill', JSON.stringify({title, image_url: img, content: `Source: ${url}`}));
+  window.location.href = '/create';
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function escJs(s){return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"')}
+</script>
+{% endblock %}

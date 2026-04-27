@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Drafts — NewsForge{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div class="page-title">📝 Drafts <span style="font-size:14px;background:#f1f5f9;padding:2px 10px;border-radius:20px;color:#64748b;font-weight:500">{{ news|length }}</span></div>
+    <a href="/create" class="btn btn-primary">✍️ New Article</a>
+  </div>
+
+  {% if not news %}
+  <div class="card">
+    <div class="empty">
+      <div class="empty-icon">📋</div>
+      <h3>No drafts yet</h3>
+      <p>Articles saved as draft will appear here.</p>
+    </div>
+  </div>
+  {% else %}
+  <div class="card">
+    <table class="table">
+      <thead><tr>
+        <th>Title</th><th>Created</th><th>Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for n in news %}
+        <tr id="row-{{ n.id }}">
+          <td>
+            <div style="font-weight:600;color:#1e293b">{{ n.title }}</div>
+            {% if n.content %}<div style="font-size:12px;color:#94a3b8;margin-top:2px">{{ n.content[:80] }}{% if n.content|length>80 %}…{% endif %}</div>{% endif %}
+          </td>
+          <td style="white-space:nowrap;color:#64748b;font-size:13px">{{ n.created_at.strftime('%d %b %Y') }}</td>
+          <td>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-success btn-sm" onclick="publishDraft({{ n.id }})">🚀 Publish</button>
+              <a href="/news/{{ n.id }}/edit" class="btn btn-outline btn-sm">✏️ Edit</a>
+              <button class="btn btn-danger btn-sm" onclick="deleteDraft({{ n.id }})">🗑</button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+<script>
+async function publishDraft(id){
+  const r=await fetch(`/api/news/${id}/publish`,{method:'POST'});
+  if((await r.json()).ok){const row=document.getElementById(`row-${id}`);row.style.opacity='.4';setTimeout(()=>row.remove(),400);}
+}
+async function deleteDraft(id){
+  if(!confirm('Delete this draft?')) return;
+  const r=await fetch(`/api/news/${id}/delete`,{method:'DELETE'});
+  if((await r.json()).ok) document.getElementById(`row-${id}`).remove();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if editing else 'Create' }} News — NewsForge{% endblock %}
+{% block content %}
+<div class="page" style="max-width:800px">
+  <div class="page-header">
+    <div class="page-title">{{ '✏️ Edit News' if editing else '✍️ Create News' }}</div>
+    <a href="/published" class="btn btn-outline">← Back</a>
+  </div>
+
+  <div class="card" style="padding:28px">
+    <form method="POST" action="{{ '/news/'+news.id|string+'/edit' if editing else '/create' }}" id="news-form">
+
+      <div style="margin-bottom:20px">
+        <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">News Title (Headline)</label>
+        <input type="text" name="title" id="title-input" value="{{ news.title if news else '' }}"
+          placeholder="Enter news headline..."
+          style="width:100%;padding:12px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;font-weight:600;outline:none"
+          required>
+      </div>
+
+      <div style="margin-bottom:20px">
+        <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Image URL</label>
+        <div style="display:flex;gap:8px">
+          <input type="text" name="image_url" id="img-input" value="{{ news.image_url if news else '' }}"
+            placeholder="https://example.com/image.jpg"
+            style="flex:1;padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none">
+          <button type="button" class="btn btn-outline" onclick="previewImg()">Preview</button>
+        </div>
+        <img id="img-preview" src="{{ news.image_url if news and news.image_url else '' }}"
+          style="margin-top:8px;max-height:160px;border-radius:8px;display:{{ 'block' if news and news.image_url else 'none' }}" onerror="this.style.display='none'" alt="">
+      </div>
+
+      <div style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <label style="font-size:13px;font-weight:600;color:#374151">Content</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="lang-sel" style="padding:5px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;outline:none">
+              <option value="Bengali">Bengali</option>
+              <option value="English">English</option>
+              <option value="Hindi">Hindi</option>
+              <option value="Arabic">Arabic</option>
+            </select>
+            <button type="button" class="btn btn-primary btn-sm" onclick="aiRewrite()" id="ai-btn">🤖 AI Rewrite + Send</button>
+          </div>
+        </div>
+        <textarea name="content" id="content-input"
+          placeholder="Write or paste news content here..."
+          style="width:100%;min-height:240px;padding:14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;line-height:1.7;outline:none;resize:vertical;font-family:inherit">{{ news.content if news else '' }}</textarea>
+        <div id="ai-status" style="margin-top:6px;font-size:12px;color:#64748b;display:none"></div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button type="submit" name="action" value="draft" class="btn btn-outline">💾 Save Draft</button>
+        <button type="submit" name="action" value="publish" class="btn btn-primary">🚀 Publish</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Pre-fill from feed "Use Story"
+const pf = sessionStorage.getItem('prefill');
+if(pf && !{{ 'true' if editing else 'false' }}){
+  try{const d=JSON.parse(pf);
+    if(d.title) document.getElementById('title-input').value=d.title;
+    if(d.image_url) document.getElementById('img-input').value=d.image_url;
+    if(d.content) document.getElementById('content-input').value=d.content;
+    previewImg();
+    sessionStorage.removeItem('prefill');
+  }catch(e){}
+}
+
+function previewImg(){
+  const url=document.getElementById('img-input').value.trim();
+  const img=document.getElementById('img-preview');
+  if(url){img.src=url;img.style.display='block';}else{img.style.display='none';}
+}
+
+async function aiRewrite(){
+  const title=document.getElementById('title-input').value.trim();
+  const content=document.getElementById('content-input').value.trim();
+  if(!title&&!content){alert('Please enter a title or content first.');return;}
+  const btn=document.getElementById('ai-btn');
+  const status=document.getElementById('ai-status');
+  btn.disabled=true;btn.textContent='✨ Rewriting...';
+  status.style.display='block';status.textContent='AI is rewriting your article...';
+  try{
+    const r=await fetch('/api/rewrite',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({title,content,language:document.getElementById('lang-sel').value})});
+    const d=await r.json();
+    if(d.error){status.textContent='❌ '+d.error;status.style.color='#dc2626';return;}
+    document.getElementById('title-input').value=d.rewritten_title||title;
+    document.getElementById('content-input').value=d.rewritten_content||content;
+    status.textContent='✅ AI rewrite complete!';status.style.color='#16a34a';
+  }catch(e){status.textContent='❌ Error: '+e.message;status.style.color='#dc2626';}
+  finally{btn.disabled=false;btn.textContent='🤖 AI Rewrite + Send';}
+}
+</script>
+{% endblock %}

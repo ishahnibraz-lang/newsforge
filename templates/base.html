@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}NewsForge{% endblock %}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--primary:#4f46e5;--primary-dark:#3730a3;--bg:#f0f4f8;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--success:#16a34a;--danger:#dc2626;--warn:#d97706;--radius:10px}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+a{text-decoration:none;color:inherit}
+/* NAV */
+.navbar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;height:56px;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.nav-logo{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:700;color:var(--primary);margin-right:28px}
+.nav-logo .licon{width:32px;height:32px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px}
+.nav-links{display:flex;gap:2px}
+.nav-links a{padding:6px 14px;border-radius:6px;color:var(--muted);font-size:14px;font-weight:500;transition:.15s}
+.nav-links a:hover,.nav-links a.active{background:rgba(79,70,229,.09);color:var(--primary)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.limit-txt{font-size:12px;color:var(--muted);font-weight:500}
+.coin{background:#fef3c7;color:#d97706;border-radius:20px;padding:3px 10px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:4px}
+.user-drop{position:relative}
+.user-btn{display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 10px;border-radius:8px;transition:.15s}
+.user-btn:hover{background:#f1f5f9}
+.uavatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.uname{font-size:13px;font-weight:600}
+.rbadge{font-size:10px;padding:2px 6px;border-radius:4px;background:#ede9fe;color:#7c3aed;font-weight:700;text-transform:uppercase}
+.drop-menu{display:none;position:absolute;right:0;top:42px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.1);min-width:160px;z-index:200}
+.user-drop:hover .drop-menu{display:block}
+.drop-menu a{display:block;padding:10px 16px;font-size:13px;color:var(--text);transition:.1s}
+.drop-menu a:hover{background:#f8fafc}
+.drop-menu .sep{border-top:1px solid var(--border);margin:4px 0}
+/* FLASH */
+.flash-box{padding:12px 24px;font-size:14px;display:flex;align-items:center;gap:8px}
+.flash-box.success{background:#f0fdf4;border-bottom:1px solid #bbf7d0;color:#15803d}
+.flash-box.error{background:#fef2f2;border-bottom:1px solid #fecaca;color:#b91c1c}
+/* CONTENT */
+.page{max-width:1200px;margin:0 auto;padding:28px 24px}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.page-title{font-size:20px;font-weight:700;display:flex;align-items:center;gap:8px}
+/* CARDS */
+.card{background:#fff;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.15s}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-dark)}
+.btn-outline{background:#fff;color:var(--text);border:1px solid var(--border)}.btn-outline:hover{background:#f8fafc}
+.btn-danger{background:#fef2f2;color:var(--danger);border:1px solid #fecaca}.btn-danger:hover{background:#fee2e2}
+.btn-success{background:#f0fdf4;color:var(--success);border:1px solid #bbf7d0}.btn-success:hover{background:#dcfce7}
+.btn-sm{padding:5px 10px;font-size:12px}
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 8px;border-radius:20px;font-weight:600}
+.badge-live{background:#dcfce7;color:#16a34a}.badge-draft{background:#fef3c7;color:#d97706}
+/* TABLE */
+.table{width:100%;border-collapse:collapse;font-size:14px}
+.table th{text-align:left;padding:12px 16px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
+.table td{padding:14px 16px;border-bottom:1px solid #f8fafc;vertical-align:middle}
+.table tr:last-child td{border-bottom:none}
+.table tr:hover td{background:#fafbfc}
+/* EMPTY */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:12px;color:var(--muted)}
+.empty-icon{font-size:40px}
+.empty h3{font-size:16px;font-weight:600;color:var(--text)}
+.empty p{font-size:13px;text-align:center}
+/* SCROLL */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+</style>
+{% block head %}{% endblock %}
+</head>
+<body>
+<nav class="navbar">
+  <a href="/" class="nav-logo">
+    <div class="licon">⚡</div>
+    NewsForge
+  </a>
+  <div class="nav-links">
+    <a href="/feed" class="{% if request.path=='/feed' %}active{% endif %}">Feed</a>
+    <a href="/published" class="{% if request.path=='/published' %}active{% endif %}">Published</a>
+    <a href="/create" class="{% if request.path=='/create' %}active{% endif %}">Create</a>
+    <a href="/drafts" class="{% if request.path=='/drafts' %}active{% endif %}">Drafts</a>
+    <a href="/observe" class="{% if request.path=='/observe' %}active{% endif %}">Observe</a>
+    {% if current_user.role == 'admin' %}
+    <a href="/admin" class="{% if '/admin' in request.path %}active{% endif %}">Admin</a>
+    {% endif %}
+  </div>
+  <div class="nav-right">
+    <span class="limit-txt">LIMIT: {{ current_user.daily_used }}/{{ current_user.daily_limit }}</span>
+    <a href="/credits" class="coin">🪙 {{ current_user.credits_remaining }}</a>
+    <div class="user-drop">
+      <div class="user-btn">
+        <div class="uavatar">{{ current_user.name[0].upper() }}</div>
+        <span class="uname">{{ current_user.name.split()[0] }}</span>
+        <span class="rbadge">{{ current_user.role }}</span>
+      </div>
+      <div class="drop-menu">
+        <a href="/credits">🪙 Credits</a>
+        <div class="sep"></div>
+        <a href="/logout">🚪 Logout</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+  <div class="flash-box {{ cat }}">{{ '✅' if cat=='success' else '❌' }} {{ msg }}</div>
+  {% endfor %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+</body>
+</html>
