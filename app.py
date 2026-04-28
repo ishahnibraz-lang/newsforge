@@ -389,6 +389,26 @@ def admin_manage_plan(pid):
 
 # ── NEWS API ─────────────────────────────────────────────────────────
 
+def _fetch_article_text(url):
+    """Fetch and extract main article text from a URL."""
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0'}
+        r = requests.get(url, headers=headers, timeout=12)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        for tag in soup(['script', 'style', 'nav', 'footer', 'header', 'aside', 'ads']):
+            tag.decompose()
+        # Try article/main body first
+        body = (soup.find('article') or
+                soup.find('main') or
+                soup.find(class_=re.compile(r'article|post-content|entry-content|story-body|content-body', re.I)))
+        text = body.get_text(separator='\n', strip=True) if body else soup.get_text(separator='\n', strip=True)
+        # Clean up blank lines
+        lines = [l.strip() for l in text.splitlines() if len(l.strip()) > 30]
+        return '\n'.join(lines)[:4000]
+    except Exception:
+        return ''
+
+
 @app.route('/api/rewrite', methods=['POST'])
 @login_required
 def api_rewrite():
@@ -399,17 +419,27 @@ def api_rewrite():
         current_user.daily_used = max(0, current_user.daily_used - 1); db.session.commit()
         return jsonify({'error': 'ANTHROPIC_API_KEY not set in Railway environment.'}), 500
     data = request.json
+    title = data.get('title', '')
+    content = data.get('content', '').strip()
+    source_url = data.get('source_url', '').strip()
+
+    # If content is empty or just the source line, fetch full article from URL
+    if source_url and (not content or len(content) < 150 or content.startswith('Source:')):
+        fetched = _fetch_article_text(source_url)
+        if fetched:
+            content = fetched
+
     try:
         client = anthropic.Anthropic(api_key=api_key)
         lang = data.get('language', 'Bengali')
         msg = client.messages.create(
             model='claude-sonnet-4-6', max_tokens=1500,
-            messages=[{'role': 'user', 'content': f"""Rewrite this news professionally in {lang}. Engaging, accurate, social-media ready.
+            messages=[{'role': 'user', 'content': f"""You are a professional news journalist. Rewrite the following news article in {lang}. Make it engaging, accurate, and social-media ready. Do NOT add anything that is not in the original article.
 
-Title: {data.get('title', '')}
-Content: {data.get('content', '')}
+Title: {title}
+Article Content: {content}
 
-Return raw JSON only (no markdown):
+Return raw JSON only (no markdown fences):
 {{"rewritten_title": "...", "rewritten_content": "...", "summary": "2-3 sentence summary", "hashtags": ["#tag1","#tag2","#tag3"]}}"""}]
         )
         text = re.sub(r'^```(?:json)?\s*\n?', '', msg.content[0].text.strip())

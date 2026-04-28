@@ -21,7 +21,8 @@
       <div style="margin-bottom:20px">
         <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Image URL</label>
         <div style="display:flex;gap:8px">
-          <input type="text" name="image_url" id="img-input" value="{{ news.image_url if news else '' }}"
+          <input type="hidden" id="source-url-input" value="{{ news.source_url if news else '' }}">
+      <input type="text" name="image_url" id="img-input" value="{{ news.image_url if news else '' }}"
             placeholder="https://example.com/image.jpg"
             style="flex:1;padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none">
           <button type="button" class="btn btn-outline" onclick="previewImg()">Preview</button>
@@ -65,6 +66,7 @@ if(pf && !{{ 'true' if editing else 'false' }}){
     if(d.title) document.getElementById('title-input').value=d.title;
     if(d.image_url) document.getElementById('img-input').value=d.image_url;
     if(d.content) document.getElementById('content-input').value=d.content;
+    if(d.url) document.getElementById('source-url-input').value=d.url;
     previewImg();
     sessionStorage.removeItem('prefill');
   }catch(e){}
@@ -79,14 +81,17 @@ function previewImg(){
 async function aiRewrite(){
   const title=document.getElementById('title-input').value.trim();
   const content=document.getElementById('content-input').value.trim();
-  if(!title&&!content){alert('Please enter a title or content first.');return;}
+  const source_url=document.getElementById('source-url-input').value.trim();
+  if(!title&&!content&&!source_url){alert('Please enter a title or source URL first.');return;}
   const btn=document.getElementById('ai-btn');
   const status=document.getElementById('ai-status');
   btn.disabled=true;btn.textContent='✨ Rewriting...';
-  status.style.display='block';status.textContent='AI is rewriting your article...';
+  status.style.display='block';
+  status.style.color='#64748b';
+  status.textContent=source_url?'⏳ Fetching article and rewriting with AI…':'⏳ AI is rewriting your article...';
   try{
     const r=await fetch('/api/rewrite',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({title,content,language:document.getElementById('lang-sel').value})});
+      body:JSON.stringify({title,content,source_url,language:document.getElementById('lang-sel').value})});
     const d=await r.json();
     if(d.error){status.textContent='❌ '+d.error;status.style.color='#dc2626';return;}
     document.getElementById('title-input').value=d.rewritten_title||title;
