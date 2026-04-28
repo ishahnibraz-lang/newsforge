@@ -204,14 +204,14 @@ async function savePlan(id){
 }
 
 function showAddUser(){
-  const plans = {{ plans|tojson }};
-  const opts = plans.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
   showModal(`<h3 style="font-size:16px;font-weight:700;margin-bottom:16px">➕ Add User</h3>
     <div style="display:flex;flex-direction:column;gap:12px">
       <input id="au-name" placeholder="Full name" style="padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px">
       <input id="au-email" type="email" placeholder="Email address" style="padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px">
       <input id="au-pass" type="password" placeholder="Password" style="padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px">
-      <select id="au-plan" style="padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px">${opts}</select>
+      <select id="au-plan" style="padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px">
+        {% for p in plans %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+      </select>
       <select id="au-role" style="padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px">
         <option value="staff">Staff</option><option value="admin">Admin</option>
       </select>

@@ -127,11 +127,12 @@
 
 <script>
 // Connections data from server
+const _all = {{ connections_data|tojson if connections_data else '[]' }};
 const CONNS = {
-  facebook: {{ connections|selectattr('platform','equalto','facebook')|list|tojson if connections else '[]' }},
-  instagram: {{ connections|selectattr('platform','equalto','instagram')|list|tojson if connections else '[]' }},
-  twitter: {{ connections|selectattr('platform','equalto','twitter')|list|tojson if connections else '[]' }},
-  wordpress: {{ connections|selectattr('platform','equalto','wordpress')|list|tojson if connections else '[]' }},
+  facebook:  _all.filter(c=>c.platform==='facebook'),
+  instagram: _all.filter(c=>c.platform==='instagram'),
+  twitter:   _all.filter(c=>c.platform==='twitter'),
+  wordpress: _all.filter(c=>c.platform==='wordpress'),
 };
 
 let _pubState = {};

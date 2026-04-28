@@ -209,7 +209,8 @@ def feed():
 def published():
     news = News.query.filter_by(user_id=current_user.id, status='published').order_by(News.published_at.desc()).all()
     connections = SocialConnection.query.filter_by(user_id=current_user.id, is_active=True).all()
-    return render_template('published.html', news=news, connections=connections)
+    connections_data = [{'id': c.id, 'platform': c.platform, 'label': c.label or c.platform} for c in connections]
+    return render_template('published.html', news=news, connections=connections, connections_data=connections_data)
 
 
 @app.route('/create', methods=['GET', 'POST'])
