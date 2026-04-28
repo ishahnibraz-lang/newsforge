@@ -31,22 +31,205 @@
         {% if n.content %}
         <p style="font-size:13px;color:#64748b;line-height:1.6">{{ n.content[:120] }}{% if n.content|length > 120 %}…{% endif %}</p>
         {% endif %}
+
+        <!-- Action buttons row 1 -->
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <a href="/news/{{ n.id }}/studio" class="btn btn-outline btn-sm">🎨 Design Studio</a>
+          <a href="/news/{{ n.id }}/studio" class="btn btn-outline btn-sm">🎨 Design</a>
           <a href="/news/{{ n.id }}/edit" class="btn btn-outline btn-sm">✏️ Edit</a>
-          <button class="btn btn-danger btn-sm" onclick="deleteNews({{ n.id }})">🗑 Delete</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteNews({{ n.id }})">🗑</button>
         </div>
+
+        <!-- Publish to social row -->
+        {% if connections %}
+        <div style="border-top:1px solid #f1f5f9;padding-top:10px">
+          <div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Publish To</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            {% set fb_conns = connections|selectattr('platform','equalto','facebook')|list %}
+            {% set ig_conns = connections|selectattr('platform','equalto','instagram')|list %}
+            {% set tw_conns = connections|selectattr('platform','equalto','twitter')|list %}
+            {% set wp_conns = connections|selectattr('platform','equalto','wordpress')|list %}
+            {% if fb_conns %}
+            <button class="btn btn-sm" style="background:#e7f0fd;color:#1877f2;border:1px solid #bdd4f9"
+              onclick="openPublish({{ n.id }},'facebook','{{ n.title|replace("'","\\'")|replace('"','\\"') }}','{{ n.image_url or '' }}','{{ n.source_url or '' }}')">📘 Facebook</button>
+            {% endif %}
+            {% if ig_conns %}
+            <button class="btn btn-sm" style="background:#fdf0f8;color:#c13584;border:1px solid #f0bee6"
+              onclick="openPublish({{ n.id }},'instagram','{{ n.title|replace("'","\\'")|replace('"','\\"') }}','{{ n.image_url or '' }}','{{ n.source_url or '' }}')">📸 Instagram</button>
+            {% endif %}
+            {% if tw_conns %}
+            <button class="btn btn-sm" style="background:#f0f0f0;color:#000;border:1px solid #ccc"
+              onclick="openPublish({{ n.id }},'twitter','{{ n.title|replace("'","\\'")|replace('"','\\"') }}','{{ n.image_url or '' }}','{{ n.source_url or '' }}')">𝕏 Twitter</button>
+            {% endif %}
+            {% if wp_conns %}
+            <button class="btn btn-sm" style="background:#e8f4fb;color:#21759b;border:1px solid #b8dcef"
+              onclick="openPublish({{ n.id }},'wordpress','{{ n.title|replace("'","\\'")|replace('"','\\"') }}','{{ n.image_url or '' }}','{{ n.source_url or '' }}')">🌐 WordPress</button>
+            {% endif %}
+            {% if not fb_conns and not ig_conns and not tw_conns and not wp_conns %}
+            <a href="/connections" style="font-size:12px;color:#94a3b8">+ Connect social accounts</a>
+            {% endif %}
+          </div>
+        </div>
+        {% else %}
+        <div style="border-top:1px solid #f1f5f9;padding-top:10px">
+          <a href="/connections" style="font-size:12px;color:#4f46e5;font-weight:600">🔗 Connect social accounts to publish</a>
+        </div>
+        {% endif %}
       </div>
     </div>
     {% endfor %}
   </div>
   {% endif %}
 </div>
+
+<!-- PUBLISH MODAL -->
+<div id="pub-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:14px;padding:28px;width:100%;max-width:480px;box-shadow:0 24px 64px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-size:16px;font-weight:700" id="pub-title">Publish to Facebook</div>
+      <button onclick="closePub()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8">✕</button>
+    </div>
+
+    <!-- Connection picker -->
+    <div style="margin-bottom:14px">
+      <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">SELECT ACCOUNT</label>
+      <select id="pub-conn" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none"></select>
+    </div>
+
+    <!-- Message -->
+    <div style="margin-bottom:14px">
+      <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">CAPTION / MESSAGE</label>
+      <textarea id="pub-msg" rows="4" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;resize:vertical;font-family:inherit"></textarea>
+      <div style="font-size:11px;color:#94a3b8;margin-top:4px" id="pub-char-count"></div>
+    </div>
+
+    <!-- News link -->
+    <div style="margin-bottom:14px">
+      <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">NEWS LINK (optional)</label>
+      <input id="pub-link" type="url" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none" placeholder="https://...">
+    </div>
+
+    <!-- Card image URL -->
+    <div style="margin-bottom:20px" id="pub-img-row">
+      <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">IMAGE URL (for photo card)</label>
+      <input id="pub-img" type="url" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none" placeholder="https://...">
+      <div style="font-size:11px;color:#94a3b8;margin-top:4px">Leave empty to post as text link.</div>
+    </div>
+
+    <div id="pub-error" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:8px;padding:10px;font-size:13px;margin-bottom:14px"></div>
+    <div id="pub-success" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;border-radius:8px;padding:10px;font-size:13px;margin-bottom:14px"></div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-outline" onclick="closePub()">Cancel</button>
+      <button class="btn btn-primary" id="pub-btn" onclick="doPublish()">🚀 Publish Now</button>
+    </div>
+  </div>
+</div>
+
 <script>
-async function deleteNews(id){
-  if(!confirm('Delete this article?')) return;
-  const r = await fetch(`/api/news/${id}/delete`,{method:'DELETE'});
-  if((await r.json()).ok) document.getElementById(`card-${id}`).remove();
+// Connections data from server
+const CONNS = {
+  facebook: {{ connections|selectattr('platform','equalto','facebook')|list|tojson if connections else '[]' }},
+  instagram: {{ connections|selectattr('platform','equalto','instagram')|list|tojson if connections else '[]' }},
+  twitter: {{ connections|selectattr('platform','equalto','twitter')|list|tojson if connections else '[]' }},
+  wordpress: {{ connections|selectattr('platform','equalto','wordpress')|list|tojson if connections else '[]' }},
+};
+
+let _pubState = {};
+
+function openPublish(nid, platform, title, imgUrl, newsLink) {
+  _pubState = { nid, platform };
+  document.getElementById('pub-title').textContent = {
+    facebook:'📘 Publish to Facebook', instagram:'📸 Publish to Instagram',
+    twitter:'𝕏 Publish to X / Twitter', wordpress:'🌐 Publish to WordPress'
+  }[platform] || 'Publish';
+
+  // Populate connection dropdown
+  const sel = document.getElementById('pub-conn');
+  sel.innerHTML = '';
+  (CONNS[platform] || []).forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.id; o.textContent = c.label || c.platform;
+    sel.appendChild(o);
+  });
+
+  // Pre-fill fields
+  document.getElementById('pub-msg').value = title;
+  document.getElementById('pub-link').value = newsLink || '';
+  document.getElementById('pub-img').value = imgUrl || '';
+
+  // Hide image row for WordPress (not needed)
+  document.getElementById('pub-img-row').style.display = platform === 'wordpress' ? 'none' : '';
+
+  document.getElementById('pub-error').style.display = 'none';
+  document.getElementById('pub-success').style.display = 'none';
+  document.getElementById('pub-btn').disabled = false;
+  document.getElementById('pub-btn').textContent = '🚀 Publish Now';
+  document.getElementById('pub-overlay').style.display = 'flex';
+
+  // char counter for Twitter
+  const msgEl = document.getElementById('pub-msg');
+  const counter = document.getElementById('pub-char-count');
+  msgEl.oninput = () => {
+    if (platform === 'twitter') {
+      const left = 280 - msgEl.value.length;
+      counter.textContent = `${left} characters remaining`;
+      counter.style.color = left < 20 ? '#dc2626' : '#94a3b8';
+    } else { counter.textContent = ''; }
+  };
+  msgEl.oninput();
+}
+
+function closePub() {
+  document.getElementById('pub-overlay').style.display = 'none';
+}
+document.getElementById('pub-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closePub();
+});
+
+async function doPublish() {
+  const { nid, platform } = _pubState;
+  const conn_id = parseInt(document.getElementById('pub-conn').value);
+  const message = document.getElementById('pub-msg').value.trim();
+  const news_link = document.getElementById('pub-link').value.trim();
+  const card_image_url = document.getElementById('pub-img').value.trim();
+
+  const errEl = document.getElementById('pub-error');
+  const okEl = document.getElementById('pub-success');
+  const btn = document.getElementById('pub-btn');
+
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+  btn.disabled = true; btn.textContent = '⏳ Publishing…';
+
+  try {
+    const r = await fetch(`/api/publish/${platform}/${nid}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conn_id, message, news_link, card_image_url }),
+    });
+    const d = await r.json();
+    if (d.error) {
+      errEl.textContent = '❌ ' + d.error;
+      errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = '🚀 Publish Now';
+    } else {
+      okEl.textContent = platform === 'wordpress'
+        ? `✅ Published to WordPress! ${d.url ? '→ ' + d.url : ''}`
+        : `✅ Published successfully!`;
+      okEl.style.display = 'block';
+      btn.textContent = '✅ Done';
+      setTimeout(closePub, 2500);
+    }
+  } catch (e) {
+    errEl.textContent = '❌ Network error: ' + e.message;
+    errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = '🚀 Publish Now';
+  }
+}
+
+async function deleteNews(id) {
+  if (!confirm('Delete this article?')) return;
+  const r = await fetch(`/api/news/${id}/delete`, { method: 'DELETE' });
+  if ((await r.json()).ok) document.getElementById(`card-${id}`).remove();
 }
 </script>
 {% endblock %}

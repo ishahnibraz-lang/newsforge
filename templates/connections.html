@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% block title %}Connections — NewsForge{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <div class="page-title">🔗 Social & Website Connections</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+
+    <!-- FACEBOOK -->
+    <div class="card" style="padding:24px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="width:44px;height:44px;border-radius:10px;background:#1877f2;display:flex;align-items:center;justify-content:center;font-size:22px">📘</div>
+        <div><div style="font-size:15px;font-weight:700">Facebook Page</div><div style="font-size:12px;color:#64748b">Publish photo cards & articles</div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <input class="field-input" id="fb-label" placeholder="Label (e.g. My News Page)" style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;outline:none">
+        <input class="field-input" id="fb-page-id" placeholder="Facebook Page ID" style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;outline:none">
+        <input class="field-input" id="fb-token" placeholder="Page Access Token" style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;outline:none">
+        <div style="font-size:11px;color:#94a3b8">Get token from <strong>Meta Developer Portal → Graph API Explorer → Page Access Token</strong></div>
+        <button class="btn btn-primary btn-sm" onclick="addConn('facebook','fb-label',{page_id:'fb-page-id',access_token:'fb-token'})">+ Connect Facebook</button>
+      </div>
+    </div>
+
+    <!-- INSTAGRAM -->
+    <div class="card" style="padding:24px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);display:flex;align-items:center;justify-content:center;font-size:22px">📸</div>
+        <div><div style="font-size:15px;font-weight:700">Instagram Business</div><div style="font-size:12px;color:#64748b">Publish photo cards with caption</div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <input class="field-input" id="ig-label" placeholder="Label (e.g. My Instagram)" style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;outline:none">
+        <input class="field-input" id="ig-user-id" placeholder="Instagram Business User ID" style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;outline:none">
+        <input class="field-input" id="ig-token" placeholder="Page Access Token (same as Facebook)" style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;outline:none">
+        <div style="font-size:11px;color:#94a3b8">Requires Instagram Business account linked to Facebook. Get IG User ID from Meta API.</div>
+        <button class="btn btn-primary btn-sm" onclick="addConn('instagram','ig-label',{ig_user_id:'ig-user-id',access_token:'ig-token'})">+ Connect Instagram</button>
+      </div>
+    </div>
+
+    <!-- TWITTER / X -->
+    <div class="card" style="padding:24px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="width:44px;height:44px;border-radius:10px;background:#000;display:flex;align-items:center;justify-content:center;font-size:22px">𝕏</div>
+        <div><div style="font-size:15px;font-weight:700">X / Twitter</div><div style="font-size:12px;color:#64748b">Post tweets with news link</div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <input class="field-input" id="tw-label" placeholder="Label (e.g. My Twitter)" style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;outline:none">
+        <input class="field-input" id="tw-api-key" placeholder="API Key" style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;outline:none">
+        <input class="field-input" id="tw-api-secret" placeholder="API Key Secret" style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;outline:none">
+        <input class="field-input" id="tw-access-token" placeholder="Access Token" style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;outline:none">
+        <input class="field-input" id="tw-access-secret" placeholder="Access Token Secret" style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;outline:none">
+        <div style="font-size:11px;color:#94a3b8">Get keys from <strong>developer.twitter.com → Your App → Keys and Tokens</strong></div>
+        <button class="btn btn-primary btn-sm" onclick="addConn('twitter','tw-label',{api_key:'tw-api-key',api_secret:'tw-api-secret',access_token:'tw-access-token',access_token_secret:'tw-access-secret'})">+ Connect X/Twitter</button>
+      </div>
+    </div>
+
+    <!-- WORDPRESS -->
+    <div class="card" style="padding:24px;position:relative">
+      {% if not current_user.plan or not current_user.plan.has_wordpress %}
+      <div style="position:absolute;inset:0;background:rgba(248,250,252,.92);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;z-index:2">
+        <div style="font-size:28px">🔒</div>
+        <div style="font-size:14px;font-weight:700">Pro / Agency Plan Required</div>
+        <a href="/#pricing" class="btn btn-primary btn-sm">Upgrade Now</a>
+      </div>
+      {% endif %}
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="width:44px;height:44px;border-radius:10px;background:#21759b;display:flex;align-items:center;justify-content:center;font-size:22px">🌐</div>
+        <div><div style="font-size:15px;font-weight:700">WordPress Site</div><div style="font-size:12px;color:#64748b">Publish full articles to your website</div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <input class="field-input" id="wp-label" placeholder="Site name (e.g. My News Site)" style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;outline:none">
+        <input class="field-input" id="wp-url" placeholder="WordPress site URL (e.g. https://mynews.com)" style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;outline:none">
+        <input class="field-input" id="wp-user" placeholder="WordPress username" style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;outline:none">
+        <input class="field-input" id="wp-pass" type="password" placeholder="Application Password (not your login password)" style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;outline:none">
+        <div style="font-size:11px;color:#94a3b8">In WordPress: <strong>Users → Profile → Application Passwords → Add New</strong></div>
+        <button class="btn btn-primary btn-sm" onclick="addConn('wordpress','wp-label',{site_url:'wp-url',username:'wp-user',app_password:'wp-pass'})">+ Connect WordPress</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONNECTED ACCOUNTS -->
+  {% if connections %}
+  <div class="card" style="margin-top:20px">
+    <div style="padding:14px 20px;border-bottom:1px solid #f1f5f9;font-size:14px;font-weight:700">✅ Connected Accounts ({{ connections|length }})</div>
+    <table class="table">
+      <thead><tr><th>Platform</th><th>Label</th><th>Connected</th><th>Remove</th></tr></thead>
+      <tbody>
+        {% for c in connections %}
+        <tr id="conn-{{ c.id }}">
+          <td>
+            {% set icons = {'facebook':'📘','instagram':'📸','twitter':'𝕏','wordpress':'🌐'} %}
+            <span style="font-size:18px">{{ icons.get(c.platform,'🔗') }}</span>
+            <strong style="margin-left:6px;text-transform:capitalize">{{ c.platform }}</strong>
+          </td>
+          <td style="font-size:13px;color:#64748b">{{ c.label }}</td>
+          <td style="font-size:12px;color:#94a3b8">{{ c.created_at.strftime('%d %b %Y') }}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteConn({{ c.id }})">🗑 Remove</button></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  <!-- PUBLISH LOG -->
+  {% if logs %}
+  <div class="card" style="margin-top:20px">
+    <div style="padding:14px 20px;border-bottom:1px solid #f1f5f9;font-size:14px;font-weight:700">📋 Recent Publish Activity</div>
+    <table class="table">
+      <thead><tr><th>Article</th><th>Platform</th><th>Status</th><th>Time</th></tr></thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td style="font-size:13px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ log.news.title if log.news else '—' }}</td>
+          <td style="text-transform:capitalize;font-size:13px">{{ log.platform }}</td>
+          <td><span class="badge {{ 'badge-live' if log.status=='success' else 'badge-draft' }}">{{ '✅ Success' if log.status=='success' else '❌ Failed' }}</span></td>
+          <td style="font-size:12px;color:#94a3b8">{{ log.created_at.strftime('%d %b, %I:%M %p') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+
+<div id="toast" style="display:none;position:fixed;bottom:24px;right:24px;padding:12px 18px;border-radius:8px;font-size:13px;font-weight:600;z-index:999;background:#052e16;color:#86efac;border:1px solid #14532d"></div>
+
+<script>
+function getVal(id){return document.getElementById(id).value.trim();}
+
+async function addConn(platform, labelId, credFields){
+  const label = getVal(labelId);
+  const credentials = {};
+  for(const [key, id] of Object.entries(credFields)){
+    credentials[key] = getVal(id);
+  }
+  const missing = Object.values(credFields).filter(id=>!getVal(id));
+  if(missing.length){toast('Please fill all fields.','error');return;}
+  const r = await fetch('/api/connections',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({platform,label:label||platform,credentials})});
+  const d = await r.json();
+  if(d.error){toast('❌ '+d.error,'error');return;}
+  toast('✅ Connected successfully!');
+  setTimeout(()=>location.reload(),1200);
+}
+
+async function deleteConn(id){
+  if(!confirm('Remove this connection?')) return;
+  const r = await fetch(`/api/connections/${id}`,{method:'DELETE'});
+  if((await r.json()).ok) document.getElementById(`conn-${id}`).remove();
+}
+
+function toast(msg, type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.style.background=type==='error'?'#3b0f0f':'#052e16';
+  t.style.color=type==='error'?'#fca5a5':'#86efac';
+  t.style.borderColor=type==='error'?'#7f1d1d':'#14532d';
+  t.style.display='block';
+  setTimeout(()=>t.style.display='none',3000);
+}
+</script>
+{% endblock %}

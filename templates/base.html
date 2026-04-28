@@ -79,6 +79,7 @@ a{text-decoration:none;color:inherit}
     <a href="/create" class="{% if request.path=='/create' %}active{% endif %}">Create</a>
     <a href="/drafts" class="{% if request.path=='/drafts' %}active{% endif %}">Drafts</a>
     <a href="/observe" class="{% if request.path=='/observe' %}active{% endif %}">Observe</a>
+    <a href="/connections" class="{% if request.path=='/connections' %}active{% endif %}">🔗 Connections</a>
     {% if current_user.role == 'admin' %}
     <a href="/admin" class="{% if '/admin' in request.path %}active{% endif %}">Admin</a>
     {% endif %}
