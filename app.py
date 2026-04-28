@@ -142,6 +142,19 @@ def admin_required(f):
     return decorated
 
 
+# ── EMERGENCY RECOVERY (remove after use) ────────────────────────────
+
+@app.route('/emergency-activate-admin-9x7k')
+def emergency_activate_admin():
+    user = User.query.filter_by(email='admin@newsforge.com').first()
+    if user:
+        user.is_active = True
+        user.role = 'admin'
+        db.session.commit()
+        return 'Admin account reactivated. <a href="/login">Login now</a>'
+    return 'Admin user not found.'
+
+
 # ── PUBLIC LANDING ────────────────────────────────────────────────────
 
 @app.route('/')
